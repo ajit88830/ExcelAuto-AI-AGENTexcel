@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8" />
+
+    <meta
+        http-equiv="X-UA-Compatible"
+        content="IE=Edge"
+    />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>
+        ExcelAuto - AI Data Cleaning Agent
+    </title>
+
+
+    <!-- Office JavaScript API -->
+
+    <script
+        src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js">
+    </script>
+
+
+    <!-- ExcelAuto CSS -->
+
+    <link
+        rel="stylesheet"
+        href="taskpane.css"
+    />
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="header">
+
+        <div class="logo">
+            EA
+        </div>
+
+
+        <div>
+
+            <h1>
+                ExcelAuto
+            </h1>
+
+            <p>
+                AI Data Cleaning Agent
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         INTRODUCTION
+    ====================================================== -->
+
+    <div class="intro">
+
+        <h2>
+            Clean your Excel data
+        </h2>
+
+
+        <p>
+            Select your dataset in Excel and let ExcelAuto
+            analyze and clean your data quality issues.
+        </p>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ACTION BUTTONS
+    ====================================================== -->
+
+    <div class="actions">
+
+
+        <button
+            id="analyzeButton"
+            class="primary-button"
+            type="button"
+        >
+            🔍 Analyze Data
+        </button>
+
+
+        <button
+            id="cleanButton"
+            class="secondary-button"
+            type="button"
+        >
+            🧹 Clean Data
+        </button>
+
+
+        <button
+            id="reportButton"
+            class="secondary-button"
+            type="button"
+        >
+            📊 Quality Report
+        </button>
+
+
+    </div>
+
+
+    <!-- =====================================================
+         LOADING BAR
+    ====================================================== -->
+
+    <div id="loadingBarWrap" style="display:none; padding: 0 16px 10px 16px;">
+        <div id="loadingBarTrack">
+            <div id="loadingBarFill"></div>
+        </div>
+        <div id="loadingBarLabel"></div>
+    </div>
+
+
+
+    <!-- =====================================================
+         CLEANING OPTIONS
+    ====================================================== -->
+
+    <div class="cleaning-options-card">
+
+
+        <div class="cleaning-options-header">
+
+            <h3>
+                Cleaning Options
+            </h3>
+
+            <p>
+                Choose how ExcelAuto should handle missing values.
+            </p>
+
+        </div>
+
+
+
+        <div class="cleaning-option">
+
+
+            <label
+                for="blankReplacementMode"
+            >
+                Missing Value Action
+            </label>
+
+
+            <select
+                id="blankReplacementMode"
+                class="cleaning-select"
+            >
+
+                <!-- Recommended option -->
+
+                <option value="smart" selected>
+                    Smart Replace
+                </option>
+
+
+                <!-- Numeric replacement -->
+
+                <option value="zero">
+                    Replace with 0
+                </option>
+
+
+                <!-- Text replacement -->
+
+                <option value="na">
+                    Replace with N/A
+                </option>
+
+
+                <!-- Statistical replacement -->
+
+                <option value="mean">
+                    Replace with Mean
+                </option>
+
+
+                <option value="median">
+                    Replace with Median
+                </option>
+
+
+                <!-- Do nothing -->
+
+                <option value="leave">
+                    Leave Blank
+                </option>
+
+
+            </select>
+
+
+        </div>
+
+        <div class="cleaning-option" style="margin-top: 15px; border-top: 1px solid #eaeaea; padding-top: 15px;">
+            <label>
+                Data Type Correction
+            </label>
+            <div style="font-size: 13px; margin-bottom: 10px; color: #555;">
+                Convert numeric text &rarr; Number
+            </div>
+            <button
+                id="convertNumericTextBtn"
+                class="ms-Button ms-Button--primary"
+                style="width: 100%;"
+            >
+                <span class="ms-Button-label">Convert</span>
+            </button>
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         STATUS
+    ====================================================== -->
+
+    <div class="status-card">
+
+
+        <div class="status-title">
+            Status
+        </div>
+
+
+        <div
+            id="status"
+            class="status-text"
+        >
+            Ready
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ANALYSIS RESULT
+    ====================================================== -->
+
+    <div
+        id="result"
+        class="result-card"
+    >
+
+
+        <h3>
+            Data Quality Analysis
+        </h3>
+
+
+
+        <!-- =================================================
+             BASIC INFORMATION
+        ================================================== -->
+
+
+        <div class="result-item">
+
+            <span>
+                Selected Range
+            </span>
+
+
+            <strong
+                id="rangeAddress"
+            >
+                -
+            </strong>
+
+        </div>
+
+
+
+        <div class="result-item">
+
+            <span>
+                Rows
+            </span>
+
+
+            <strong
+                id="rowCount"
+            >
+                -
+            </strong>
+
+        </div>
+
+
+
+        <div class="result-item">
+
+            <span>
+                Columns
+            </span>
+
+
+            <strong
+                id="columnCount"
+            >
+                -
+            </strong>
+
+        </div>
+
+
+
+        <div class="result-item">
+
+            <span>
+                Blank Cells
+            </span>
+
+
+            <strong
+                id="blankCount"
+            >
+                -
+            </strong>
+
+        </div>
+
+
+
+        <div class="result-item">
+
+            <span>
+                Duplicate Rows
+            </span>
+
+
+            <strong
+                id="duplicateCount"
+            >
+                -
+            </strong>
+
+        </div>
+
+
+
+        <!-- =================================================
+             CLEANING SUMMARY
+        ================================================== -->
+
+        <div class="cleaning-section">
+
+
+            <h3>
+                Cleaning Summary
+            </h3>
+
+
+
+            <div id="cleaningSummary">
+
+
+                <div class="no-issues">
+
+                    No cleaning performed yet.
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             DETECTED ISSUES
+        ================================================== -->
+
+        <div class="issues-section">
+
+
+            <h3>
+                Detected Issues
+            </h3>
+
+
+
+            <div id="issuesContainer">
+
+
+                <div class="no-issues">
+
+                    No analysis performed yet.
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             OUTLIER ANALYSIS
+        ================================================== -->
+
+        <div class="outliers-section">
+
+            <h3>
+                Outlier Analysis
+            </h3>
+
+            <div id="outliersContainer">
+                <div class="no-issues">
+                    No analysis performed yet.
+                </div>
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             COLUMN PROFILE
+        ================================================== -->
+
+        <div class="column-profile-section">
+
+
+            <h3>
+                Column Profile
+            </h3>
+
+
+
+            <div id="columnProfile">
+
+                <!--
+                    Column profile is generated
+                    dynamically by taskpane.js.
+                -->
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <div class="footer">
+
+        ExcelAuto • Excel Data Quality Assistant
+
+    </div>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     EXCELAUTO JAVASCRIPT
+========================================================= -->
+
+<script
+    src="taskpane.js">
+</script>
+
+
+</body>
+
+</html>
