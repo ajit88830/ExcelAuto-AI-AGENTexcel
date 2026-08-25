@@ -1,0 +1,351 @@
+﻿<html xmlns:o='urn:schemas-microsoft-com:office:office'
+      xmlns:w='urn:schemas-microsoft-com:office:word'
+      xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset='UTF-8'>
+<title>ExcelAuto - Full Implementation Document</title>
+<!--[if gte mso 9]>
+<xml>
+  <w:WordDocument>
+    <w:View>Print</w:View>
+    <w:Zoom>100</w:Zoom>
+    <w:DoNotOptimizeForBrowser/>
+  </w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #222; margin: 2.5cm; line-height: 1.6; }
+  h1 { font-size: 22pt; font-weight: bold; color: #1a237e; text-align: center; border-bottom: 3px solid #1a237e; padding-bottom: 8px; }
+  h2 { font-size: 15pt; font-weight: bold; color: #283593; margin-top: 24px; border-left: 5px solid #3949ab; padding-left: 10px; background: #e8eaf6; padding-top: 4px; padding-bottom: 4px; }
+  h3 { font-size: 12pt; font-weight: bold; color: #1565c0; margin-top: 16px; }
+  h4 { font-size: 11pt; font-weight: bold; color: #37474f; margin-top: 12px; }
+  p { margin: 6px 0 10px 0; }
+  .cover-box { background: #e8eaf6; border: 1px solid #3949ab; padding: 16px 24px; margin-bottom: 30px; text-align: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 10.5pt; margin: 12px 0 18px 0; }
+  th { background: #3949ab; color: #fff; padding: 8px 12px; text-align: left; font-weight: bold; }
+  td { padding: 7px 12px; border: 1px solid #c5cae9; vertical-align: top; }
+  tr:nth-child(even) td { background: #f3f4fd; }
+  .note { background: #fff3e0; border-left: 4px solid #f57c00; padding: 8px 14px; margin: 10px 0; }
+  .info { background: #e3f2fd; border-left: 4px solid #1976d2; padding: 8px 14px; margin: 10px 0; }
+  .success { background: #e8f5e9; border-left: 4px solid #388e3c; padding: 8px 14px; margin: 10px 0; }
+  code { font-family: Courier New, monospace; background: #f5f5f5; border: 1px solid #ddd; padding: 1px 5px; font-size: 10pt; }
+  pre { font-family: Courier New, monospace; background: #263238; color: #aed6f1; padding: 14px 18px; font-size: 9.5pt; margin: 10px 0; white-space: pre-wrap; }
+  ul, ol { margin: 6px 0 10px 0; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  .footer { text-align: center; margin-top: 40px; font-size: 9pt; color: #aaa; border-top: 1px solid #ddd; padding-top: 10px; }
+  .toc-item { margin: 3px 0; }
+  @page { margin: 2.5cm; }
+</style>
+</head>
+<body>
+
+<div class="cover-box">
+  <h1>ExcelAuto</h1>
+  <p style="font-size:12pt;color:#444;">AI Data Cleaning Agent for Microsoft Excel</p>
+  <p style="font-size:10pt;color:#444;">Full Implementation Documentation &mdash; Version 1.0</p>
+  <p style="font-size:10pt;color:#666;">Date: August 2026</p>
+</div>
+
+<h2>Table of Contents</h2>
+<div class="toc-item">1. Project Overview</div>
+<div class="toc-item">2. Technology Stack</div>
+<div class="toc-item">3. What Each Technology Does</div>
+<div class="toc-item">4. Project Architecture &amp; Folder Structure</div>
+<div class="toc-item">5. How the Add-in Works (End-to-End Flow)</div>
+<div class="toc-item">6. Feature Implementation Details</div>
+<div class="toc-item">&nbsp;&nbsp;&nbsp;6.1 Analyze Data</div>
+<div class="toc-item">&nbsp;&nbsp;&nbsp;6.2 Clean Data</div>
+<div class="toc-item">&nbsp;&nbsp;&nbsp;6.3 Quality Report</div>
+<div class="toc-item">&nbsp;&nbsp;&nbsp;6.4 Primary Key Detection (Smart Duplicates)</div>
+<div class="toc-item">&nbsp;&nbsp;&nbsp;6.5 Loading Bar</div>
+<div class="toc-item">&nbsp;&nbsp;&nbsp;6.6 Download Report (.doc)</div>
+<div class="toc-item">7. Data Quality Score Algorithm</div>
+<div class="toc-item">8. Setup &amp; Run Steps</div>
+<div class="toc-item">9. How to Sideload in Excel</div>
+<div class="toc-item">10. Known Limitations</div>
+
+<h2>1. Project Overview</h2>
+<p>ExcelAuto is a Microsoft Excel Task Pane Add-in that provides intelligent, automated data cleaning and quality analysis directly inside Excel. It operates on user-selected data ranges and can detect, report, and fix a wide range of data quality issues with a single click.</p>
+<p>The add-in was designed to eliminate the need for manual formula-based data cleaning, VBA scripting, or external ETL tools. It runs entirely within the Excel environment using standard web technologies (HTML, CSS, JavaScript) and communicates with Excel data model using the Office.js API.</p>
+<div class="info"><strong>Core Principle:</strong> ExcelAuto never requires an internet connection during data processing. All analysis and cleaning logic runs locally in the browser runtime inside Excel.</div>
+
+<h2>2. Technology Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th></tr>
+  <tr><td>Add-in API</td><td>Office.js (Microsoft Office JavaScript API)</td><td>v1 (hosted)</td><td>Reads and writes data to Excel workbook</td></tr>
+  <tr><td>UI Structure</td><td>HTML5</td><td>Standard</td><td>Task pane layout and component structure</td></tr>
+  <tr><td>Styling</td><td>Vanilla CSS3</td><td>Standard</td><td>All task pane styling, animations, loading bar</td></tr>
+  <tr><td>Logic</td><td>Vanilla JavaScript (ES6+)</td><td>ES2017+</td><td>All data analysis, cleaning, and UI logic</td></tr>
+  <tr><td>Async Handling</td><td>JavaScript Promises / async-await</td><td>ES2017</td><td>Handles all asynchronous Excel API calls</td></tr>
+  <tr><td>Build Tool</td><td>Webpack 5</td><td>5.109.2</td><td>Bundles and minifies JS, CSS, HTML for production</td></tr>
+  <tr><td>Transpiler</td><td>Babel</td><td>7.x</td><td>Converts modern JS to browser-compatible JS</td></tr>
+  <tr><td>Polyfills</td><td>core-js + regenerator-runtime</td><td>3.x</td><td>Supports older browsers and Excel versions</td></tr>
+  <tr><td>Dev Server</td><td>webpack-dev-server</td><td>5.x</td><td>Hosts add-in locally on HTTPS port 3000</td></tr>
+  <tr><td>Office CLI</td><td>office-addin-debugging</td><td>Latest</td><td>Sideloads manifest into Excel for development</td></tr>
+  <tr><td>Package Manager</td><td>npm</td><td>Latest</td><td>Manages all project dependencies</td></tr>
+  <tr><td>Runtime</td><td>Node.js</td><td>16+</td><td>Required to run Webpack and npm scripts</td></tr>
+</table>
+
+<h2>3. What Each Technology Does</h2>
+
+<h3>3.1 Office.js - The Core Bridge</h3>
+<p>Office.js is Microsoft official JavaScript API for Office Add-ins. It acts as the bridge between your web code and Excel internal data model. Without Office.js, there is no way for the add-in to read data from the spreadsheet or write cleaned data back.</p>
+<ul>
+  <li>Provides <code>Excel.run()</code> which creates a safe, batched execution context for all Excel operations.</li>
+  <li>Exposes <code>context.workbook.getSelectedRange()</code> to read the user selected cells.</li>
+  <li>Allows writing cleaned values back via <code>range.values = cleanedValues</code>.</li>
+  <li>All calls are asynchronous and must be awaited.</li>
+</ul>
+<div class="note"><strong>Key Point:</strong> Office.js uses a proxy object pattern. You queue up operations, then call <code>context.sync()</code> to execute them all in one round-trip to Excel.</div>
+
+<h3>3.2 HTML5 - Task Pane Structure</h3>
+<p>The file <code>taskpane.html</code> defines the entire visible structure of the add-in, including: header, action buttons, loading bar, Cleaning Options card (dropdowns, convert button), Status panel, Data Quality Analysis section, Cleaning Summary, Issues, Outlier Analysis, and Column Profile sections.</p>
+
+<h3>3.3 CSS3 - Styling and Animations</h3>
+<p>The file <code>taskpane.css</code> styles all visual elements.</p>
+<ul>
+  <li><strong>Loading Bar:</strong> Uses CSS @keyframes animation for a smooth progress sweep effect.</li>
+  <li><strong>Buttons:</strong> Custom primary and secondary button styles with hover transitions.</li>
+  <li><strong>Cards:</strong> Result, status, and option panels use box shadows and border-radius for a modern look.</li>
+</ul>
+
+<h3>3.4 Vanilla JavaScript ES6+ - All Logic</h3>
+<p>The file <code>taskpane.js</code> (2600+ lines) contains all the intelligence. It is organized into:</p>
+<ul>
+  <li><strong>DOM Element References:</strong> Gets handles to all HTML elements on startup.</li>
+  <li><strong>Global State Variables:</strong> Stores snapshots, scores, and cleaning summaries in memory across function calls.</li>
+  <li><strong>Helper Functions:</strong> isBlank(), isMissingValue(), calculateMean(), calculateMedian(), detectPrimaryKeyIndex(), createRowKey().</li>
+  <li><strong>Core Feature Functions:</strong> analyzeData(), cleanData(), generateQualityReport().</li>
+  <li><strong>UI Helpers:</strong> setStatus(), showLoading(), hideLoading(), displayCleaningSummary().</li>
+  <li><strong>Event Listeners:</strong> Wires all button clicks to their async functions.</li>
+</ul>
+
+<h3>3.5 Webpack 5 - Build System</h3>
+<p>Webpack reads source files and produces optimized output in the <code>dist/</code> folder.</p>
+<ul>
+  <li><strong>Development mode</strong> (<code>npm run dev-server</code>): Serves files live with Hot Module Replacement (HMR). Code changes reflect instantly without a page reload.</li>
+  <li><strong>Production mode</strong> (<code>npm run build</code>): Minifies and bundles all files for smallest possible size.</li>
+</ul>
+
+<h3>3.6 Babel - JavaScript Transpiler</h3>
+<p>ExcelAuto uses modern JavaScript syntax (async/await, arrow functions, template literals, const/let). Babel converts this into older JavaScript compatible with Excel embedded browser runtime, which on Windows is often based on an older Chromium or IE11 engine.</p>
+
+<h3>3.7 office-addin-debugging CLI</h3>
+<p>This npm package powers the <code>npm start</code> command. It:</p>
+<ol>
+  <li>Starts the webpack dev server.</li>
+  <li>Reads the manifest.xml file.</li>
+  <li>Registers the add-in with Excel via the Windows registry.</li>
+  <li>Opens a new Excel instance with the add-in sideloaded and active.</li>
+</ol>
+
+<h2>4. Project Architecture and Folder Structure</h2>
+<pre>
+ExcelAuto/
+|
++-- src/                        All source code
+|   +-- taskpane/
+|   |   +-- taskpane.html       UI structure of the task pane
+|   |   +-- taskpane.css        Styling (loading bar, buttons, cards)
+|   |   +-- taskpane.js         ALL logic (2600+ lines)
+|   +-- commands/
+|       +-- commands.html       Ribbon command host page
+|       +-- commands.js         Ribbon command handlers
+|
++-- assets/                     Icons for the add-in
+|   +-- icon-16.png
+|   +-- icon-32.png
+|   +-- icon-80.png
+|   +-- logo-filled.png
+|
++-- dist/                       Production build output (auto-generated)
+|   +-- taskpane.js             Minified bundle
+|   +-- taskpane.html           Processed HTML
+|   +-- polyfill.js             Browser polyfills
+|
++-- manifest.xml                Office Add-in manifest
+|                               (Tells Excel: ID, name, icons, URLs, permissions)
++-- webpack.config.js           Build configuration
++-- babel.config.json           Babel transpiler configuration
++-- package.json                Project metadata and npm scripts
++-- README.md                   Project documentation
+</pre>
+
+<h3>How manifest.xml Works</h3>
+<p>The manifest.xml is the registration file for the add-in. It contains:</p>
+<ul>
+  <li><strong>Unique GUID:</strong> 8fd378d0-a2ea-4392-a1fc-90bb82955d0f</li>
+  <li><strong>Source Location:</strong> https://localhost:3000/taskpane.html (in development)</li>
+  <li><strong>Icon paths</strong>, display name, description, and supported Excel versions.</li>
+  <li><strong>Permissions:</strong> ReadWriteDocument - allows reading and writing cell values.</li>
+</ul>
+
+<h2>5. How the Add-in Works (End-to-End Flow)</h2>
+<ol>
+  <li><strong>Excel Loads:</strong> Excel reads manifest.xml, finds the task pane URL, opens it in an embedded browser (WebView2 on Windows).</li>
+  <li><strong>Office.js Initializes:</strong> The Office.onReady() callback fires. DOM elements are referenced and event listeners are attached.</li>
+  <li><strong>User Selects Data:</strong> User selects a range in Excel (e.g., A1:J200) including the header row.</li>
+  <li><strong>User Clicks a Button:</strong> The click listener calls the relevant async function.</li>
+  <li><strong>Loading Bar Appears:</strong> showLoading() displays the animated progress bar.</li>
+  <li><strong>Office.js Reads the Range:</strong> Inside Excel.run(), getSelectedRange() fetches cell values and number formats.</li>
+  <li><strong>JavaScript Processes Data:</strong> All analysis/cleaning runs in pure JavaScript, in memory, with no external API calls.</li>
+  <li><strong>Results Written Back (Clean only):</strong> Cleaned values are written via range.values = newValues and await context.sync().</li>
+  <li><strong>UI Updates:</strong> Task pane panels update to show results, loading bar hides.</li>
+</ol>
+
+<h2>6. Feature Implementation Details</h2>
+
+<h3>6.1 Analyze Data</h3>
+<p>Function: analyzeData() in taskpane.js</p>
+<table>
+  <tr><th>Step</th><th>What It Detects</th><th>How It Works</th></tr>
+  <tr><td>1</td><td>Blank Cells</td><td>Loops through every cell. isBlank() checks for null, empty string, or undefined.</td></tr>
+  <tr><td>2</td><td>Missing Values (N/A)</td><td>isMissingValue() checks for "na", "n/a", "none", "null", "-".</td></tr>
+  <tr><td>3</td><td>Primary Key Detection</td><td>detectPrimaryKeyIndex() scores columns for uniqueness and ID-like keywords.</td></tr>
+  <tr><td>4</td><td>Duplicate Rows</td><td>Creates a key per row using createRowKey(row, pkIndex). Uses a JavaScript Set to find repeated keys.</td></tr>
+  <tr><td>5</td><td>Extra Spaces</td><td>Checks if value.trim() !== value for every string cell.</td></tr>
+  <tr><td>6</td><td>Data Type Issues</td><td>Regex test on string cells to detect numeric text like "42".</td></tr>
+  <tr><td>7</td><td>Date Format Issues</td><td>Multi-format date parser detects inconsistent or non-standard date strings.</td></tr>
+  <tr><td>8</td><td>Invalid Dates</td><td>Detects logically impossible dates (Feb 30, month 13). Stores cell address, value, and reason.</td></tr>
+  <tr><td>9</td><td>Outliers (IQR Method)</td><td>For numeric columns: calculates Q1, Q3, IQR. Flags values below Q1-1.5*IQR or above Q3+1.5*IQR.</td></tr>
+  <tr><td>10</td><td>Category Issues</td><td>For low-cardinality columns, detects case inconsistencies like "Active" vs "active".</td></tr>
+  <tr><td>11</td><td>Column Profile</td><td>Per column: counts non-blank, unique values, missing/NA, data type, extra-space count.</td></tr>
+  <tr><td>12</td><td>Data Quality Score</td><td>Calls calculateDataQualityScore(issues, totalRows). See Section 7.</td></tr>
+</table>
+
+<h3>6.2 Clean Data</h3>
+<p>Function: cleanData() in taskpane.js</p>
+<table>
+  <tr><th>Step</th><th>Operation</th><th>Logic</th></tr>
+  <tr><td>1</td><td>Trim Extra Spaces</td><td>value.trim() on every string cell. Updates if changed.</td></tr>
+  <tr><td>2</td><td>Capitalization Standardization</td><td>For categorical columns (low unique ratio), converts to Title Case.</td></tr>
+  <tr><td>3</td><td>Numeric Text Conversion</td><td>If a string passes numeric regex, converts to JavaScript Number.</td></tr>
+  <tr><td>4</td><td>Date Normalization</td><td>Parses recognizable date strings and converts to Excel serial date number format.</td></tr>
+  <tr><td>5</td><td>Missing Value Replacement</td><td>Based on dropdown: fills blanks with 0, "N/A", column mean, median, or smart auto-detect.</td></tr>
+  <tr><td>6</td><td>Write Back to Excel</td><td>range.values = values + context.sync() pushes all cleaned data to Excel in one batch.</td></tr>
+  <tr><td>7</td><td>Duplicate Removal</td><td>Keeps only unique rows based on Primary Key selection. Pads removed rows with blank arrays.</td></tr>
+</table>
+<div class="note"><strong>Important:</strong> Invalid dates and outliers are intentionally NOT cleaned automatically. They require manual review.</div>
+
+<h3>6.3 Quality Report</h3>
+<p>Function: generateQualityReport() in taskpane.js</p>
+<table>
+  <tr><th>Section</th><th>Data Source</th></tr>
+  <tr><td>Dataset Summary</td><td>From current analysis snapshot (rows, columns, total cells)</td></tr>
+  <tr><td>Quality Score</td><td>Before: beforeCleaningScore. After: currentQualityScore.</td></tr>
+  <tr><td>Issues Detected</td><td>From beforeCleaningSnapshot (pre-clean state)</td></tr>
+  <tr><td>Cleaning Summary</td><td>From lastCleaningSummary object (counters per operation)</td></tr>
+  <tr><td>Issues Remaining</td><td>From currentAnalysisSnapshot (post-clean state)</td></tr>
+  <tr><td>Manual Review</td><td>From currentInvalidDateCells array and outlier count</td></tr>
+  <tr><td>Final Status</td><td>If remaining = 0: Clean. If only outliers: Review. Otherwise: Issues remaining.</td></tr>
+</table>
+
+<h3>6.4 Primary Key Detection (Smart Duplicates)</h3>
+<p>Function: detectPrimaryKeyIndex(values, dataStartRow)</p>
+<p>The heuristic engine scores each column:</p>
+<table>
+  <tr><th>Criterion</th><th>Score Added</th></tr>
+  <tr><td>Header contains "id", "code", "key", "no", "index"</td><td>+50 points</td></tr>
+  <tr><td>Zero blank cells in the column</td><td>+20 points</td></tr>
+  <tr><td>95% or more values are unique</td><td>+30 points</td></tr>
+</table>
+<p>The column with the highest score (above 60) is returned as the detected primary key. It is shown in the UI dropdown as "(Auto-detected)".</p>
+<p>Function: createRowKey(row, pkIndex)</p>
+<ul>
+  <li>If pkIndex >= 0: returns only the normalized value of the primary key column as the duplicate-detection key.</li>
+  <li>If pkIndex === -1: falls back to concatenating all cells (Entire Row mode).</li>
+</ul>
+
+<h3>6.5 Loading Bar</h3>
+<p>Functions: showLoading(label) and hideLoading()</p>
+<p>A CSS @keyframes sweep animation defined in taskpane.css. It is shown before each async operation and hidden in the finally block of try/catch/finally, guaranteeing it always disappears even if there is an error.</p>
+
+<h3>6.6 Download Report (.doc)</h3>
+<p>Function: downloadQualityReport(sections, sectionHtmlFn, rowFn)</p>
+<p>Generates a Word-compatible HTML string using Microsoft Office XML namespaces (xmlns:o, xmlns:w) and conditional comments for Word rendering. Uses the browser Blob API and a temporary anchor element click to trigger the download of ExcelAuto_Quality_Report_YYYY-MM-DD.doc.</p>
+
+<h2>7. Data Quality Score Algorithm</h2>
+<p>Function: calculateDataQualityScore(issues, totalRows)</p>
+<table>
+  <tr><th>Issue Type</th><th>Weight (penalty per issue)</th><th>Severity</th></tr>
+  <tr><td>Invalid Dates</td><td>3.0</td><td>HIGH</td></tr>
+  <tr><td>Duplicate Rows</td><td>3.0</td><td>HIGH</td></tr>
+  <tr><td>Missing Values</td><td>2.5</td><td>HIGH</td></tr>
+  <tr><td>Blank Cells</td><td>2.5</td><td>HIGH</td></tr>
+  <tr><td>Data Type Issues</td><td>2.0</td><td>MEDIUM-HIGH</td></tr>
+  <tr><td>Category Issues</td><td>1.5</td><td>MEDIUM</td></tr>
+  <tr><td>Date Format Issues</td><td>1.5</td><td>MEDIUM</td></tr>
+  <tr><td>Outliers</td><td>0.5</td><td>LOW (may be valid)</td></tr>
+  <tr><td>Extra Spaces</td><td>0.3</td><td>LOW</td></tr>
+</table>
+<p><strong>Formula:</strong></p>
+<pre>
+totalPenalty = sum of (issueCount x weight) for each issue type
+maxPenalty   = totalRows x 3.0   (worst case: every row has a HIGH issue)
+rawScore     = 1 - (totalPenalty / maxPenalty)
+finalScore   = max(0, round(rawScore x 100))
+</pre>
+<div class="success">
+  <strong>Score Thresholds:</strong><br>
+  90% or above = Green (Good) | 70 to 89% = Yellow (Fair) | Below 70% = Red (Poor)
+</div>
+
+<h2>8. Setup and Run Steps</h2>
+<h3>Prerequisites</h3>
+<ul>
+  <li>Node.js 16 or higher installed</li>
+  <li>npm (comes with Node.js)</li>
+  <li>Microsoft Excel Desktop (Windows or Mac)</li>
+  <li>VS Code (recommended) or any terminal</li>
+</ul>
+<h3>Step-by-Step Setup</h3>
+<ol>
+  <li>Open a terminal (PowerShell or VS Code terminal).</li>
+  <li>Navigate to the project folder: cd C:\Users\Bargavi\Desktop\ExcelAuto\ExcelAuto</li>
+  <li>Install all dependencies: npm install</li>
+  <li>Start the add-in in development mode: npm start</li>
+  <li>A new Excel window will open with ExcelAuto sideloaded and ready to use.</li>
+</ol>
+<h3>Other Useful Commands</h3>
+<table>
+  <tr><th>Command</th><th>What It Does</th></tr>
+  <tr><td>npm start</td><td>Starts dev server + sideloads add-in + opens Excel</td></tr>
+  <tr><td>npm run dev-server</td><td>Starts dev server only (no Excel auto-launch)</td></tr>
+  <tr><td>npm run build</td><td>Builds production-ready bundle in /dist folder</td></tr>
+  <tr><td>npm run stop</td><td>Stops the debugging session</td></tr>
+</table>
+
+<h2>9. How to Sideload in Excel (Manual)</h2>
+<h3>Windows Desktop</h3>
+<ol>
+  <li>Make sure npm run dev-server is running.</li>
+  <li>In Excel, go to Insert &gt; Add-ins &gt; My Add-ins.</li>
+  <li>Click Upload My Add-in.</li>
+  <li>Browse to and select manifest.xml from the project root.</li>
+  <li>Click Upload. ExcelAuto will appear in the task pane.</li>
+</ol>
+<h3>Mac Desktop</h3>
+<ol>
+  <li>Copy manifest.xml to: ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef/</li>
+  <li>Restart Excel.</li>
+  <li>Open Insert &gt; Add-ins to find ExcelAuto.</li>
+</ol>
+<div class="note"><strong>Tip:</strong> If you see "Add-in error: no longer available", the dev server was stopped while Excel still had the old session. Run npm start again to restart cleanly.</div>
+
+<h2>10. Known Limitations</h2>
+<table>
+  <tr><th>Limitation</th><th>Reason</th></tr>
+  <tr><td>Works only on the selected range</td><td>Office.js is scoped to the user selection. The add-in cannot access cells outside automatically.</td></tr>
+  <tr><td>Outliers are never auto-removed</td><td>Outliers may be legitimate business values. The add-in flags them for human review only.</td></tr>
+  <tr><td>Invalid dates are not corrected</td><td>The add-in cannot determine what the correct date should be. Manual correction is required.</td></tr>
+  <tr><td>Duplicate removal does not delete worksheet rows</td><td>Deleting rows could remove data outside the selected range. The add-in removes from the array and pads with blanks.</td></tr>
+  <tr><td>Downloaded .doc report is HTML-based</td><td>Word opens HTML files with the .doc extension natively. Not a native DOCX format. LibreOffice Writer also opens it correctly.</td></tr>
+  <tr><td>No cloud or server component</td><td>All processing runs locally. There is no backend, database, or cloud API involved.</td></tr>
+</table>
+
+<div class="footer">
+  ExcelAuto &bull; Excel AI Data Cleaning Agent &bull; Full Implementation Document &bull; Version 1.0 &bull; August 2026
+</div>
+
+</body>
+</html>

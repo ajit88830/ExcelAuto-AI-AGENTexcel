@@ -19,6 +19,9 @@ Office.onReady(function (info) {
     const cleanButton = document.getElementById("cleanButton");
     const reportButton = document.getElementById("reportButton");
     const convertNumericTextBtn = document.getElementById("convertNumericTextBtn");
+    
+    const primaryKeySelect = document.getElementById("primaryKeySelect");
+    let detectedPrimaryKeyIndex = -1;
 
     const missingValueOption =
         document.getElementById("blankReplacementMode");
@@ -516,21 +519,57 @@ Office.onReady(function (info) {
         return String(a).trim() === String(b).trim();
     }
 
+    function detectPrimaryKeyIndex(values, dataStartRow) {
+        if (!values || values.length <= dataStartRow || values[0].length === 0) return -1;
+        
+        const headers = values[0].map(h => String(h).toLowerCase());
+        const keywordRegex = /(id|code|key|no|index)\b/i;
+        
+        let bestIndex = -1;
+        let bestScore = 0;
+        
+        for (let c = 0; c < headers.length; c++) {
+            let score = 0;
+            if (keywordRegex.test(headers[c])) {
+                score += 50;
+            }
+            
+            const uniqueVals = new Set();
+            let blanks = 0;
+            let total = 0;
+            for (let r = dataStartRow; r < values.length; r++) {
+                const val = values[r][c];
+                total++;
+                if (isBlank(val)) blanks++;
+                else uniqueVals.add(String(val).trim().toLowerCase());
+            }
+            
+            if (total > 0 && blanks === 0) {
+                score += 20; 
+                const uniquePercent = uniqueVals.size / total;
+                if (uniquePercent > 0.95) score += 30;
+            }
+            
+            if (score > bestScore && score > 60) {
+                bestScore = score;
+                bestIndex = c;
+            }
+        }
+        return bestIndex;
+    }
 
-    function createRowKey(row) {
+
+    function createRowKey(row, pkIndex = -1) {
+        if (pkIndex >= 0 && pkIndex < row.length) {
+            const val = row[pkIndex];
+            if (isBlank(val)) return `BLANK_${Math.random()}`; 
+            return String(val).replace(/\s+/g, " ").trim().toLowerCase();
+        }
 
         return row
             .map(function (value) {
-
-                if (isBlank(value)) {
-                    return "";
-                }
-
-                return String(value)
-                    .replace(/\s+/g, " ")
-                    .trim()
-                    .toLowerCase();
-
+                if (isBlank(value)) return "";
+                return String(value).replace(/\s+/g, " ").trim().toLowerCase();
             })
             .join("||");
     }
@@ -635,6 +674,37 @@ Office.onReady(function (info) {
                 }
             }
 
+            // -------------------------------------------------
+            // PRIMARY KEY DETECTION & UI UPDATE
+            // -------------------------------------------------
+            
+            detectedPrimaryKeyIndex = detectPrimaryKeyIndex(values, data.dataStartRow);
+            
+            if (primaryKeySelect && values[0]) {
+                const currentVal = primaryKeySelect.value;
+                primaryKeySelect.innerHTML = `
+                    <option value="auto">Auto-Detect (Heuristics)</option>
+                    <option value="-1">Entire Row (Exact Match)</option>
+                `;
+                
+                values[0].forEach((header, index) => {
+                    const isDetected = (index === detectedPrimaryKeyIndex);
+                    const label = isDetected ? `${header} (Auto-detected)` : header;
+                    primaryKeySelect.innerHTML += `<option value="${index}">${label}</option>`;
+                });
+                
+                // Restore selection if valid
+                if (Array.from(primaryKeySelect.options).some(opt => opt.value === currentVal)) {
+                    primaryKeySelect.value = currentVal;
+                }
+            }
+            
+            // Determine the actual index to use for duplicate detection
+            let currentPkIndex = -1;
+            if (primaryKeySelect) {
+                if (primaryKeySelect.value === "auto") currentPkIndex = detectedPrimaryKeyIndex;
+                else currentPkIndex = parseInt(primaryKeySelect.value, 10);
+            }
 
             // -------------------------------------------------
             // DUPLICATE ROWS
@@ -644,7 +714,7 @@ Office.onReady(function (info) {
             let duplicateCount = 0;
 
             for (let r = data.dataStartRow; r < values.length; r++) {
-                const key = createRowKey(values[r]);
+                const key = createRowKey(values[r], currentPkIndex);
                 if (seenRows.has(key)) {
                     duplicateCount++;
                 } else {
@@ -1857,6 +1927,12 @@ Office.onReady(function (info) {
             uniqueFormats.push(formats[0]);
             
             const seenRows = new Set();
+            
+            let currentPkIndex = -1;
+            if (primaryKeySelect) {
+                if (primaryKeySelect.value === "auto") currentPkIndex = detectedPrimaryKeyIndex;
+                else currentPkIndex = parseInt(primaryKeySelect.value, 10);
+            }
 
             for (
                 let r = 1;
@@ -1864,8 +1940,7 @@ Office.onReady(function (info) {
                 r++
             ) {
 
-                const key =
-                    createRowKey(values[r]);
+                const key = createRowKey(values[r], currentPkIndex);
 
                 if (seenRows.has(key)) {
 

@@ -222,6 +222,18 @@
         </div>
 
         <div class="cleaning-option" style="margin-top: 15px; border-top: 1px solid #eaeaea; padding-top: 15px;">
+            <label for="primaryKeySelect">
+                Primary Key / Duplicates
+            </label>
+            <div style="font-size: 13px; margin-bottom: 6px; color: #555;">
+                Match row to find duplicates by:
+            </div>
+            <select id="primaryKeySelect" class="cleaning-select">
+                <option value="auto" selected>Auto-Detect (Heuristics)</option>
+                <option value="-1">Entire Row (Exact Match)</option>
+            </select>
+        </div>
+        <div class="cleaning-option" style="margin-top: 15px; border-top: 1px solid #eaeaea; padding-top: 15px;">
             <label>
                 Data Type Correction
             </label>
